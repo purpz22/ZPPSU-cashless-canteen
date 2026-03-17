@@ -15,7 +15,7 @@
         <h1 class="text-2xl font-bold">ZPPSU CANTEEN</h1>
         <p class="text-sm opacity-90">Menu</p>
       </div>
-      <button onclick="logout()" class="bg-red-900 hover:bg-red-800 px-4 py-2 rounded-xl text-sm font-bold shadow-inner border border-red-800 transition">
+      <button onclick="document.getElementById('logout-modal').style.display = 'flex'">
         🚪 Logout
       </button>
     </header>    <div id="content" class="p-4"></div>
@@ -61,6 +61,23 @@ function logout() {
         window.location.replace("login.html");
     }, 100);
   }
+}
+
+// Function to show the custom modal
+function showLogoutModal() {
+    document.getElementById('logout-modal').style.display = 'flex';
+}
+
+// Function to hide the custom modal
+function hideLogoutModal() {
+    document.getElementById('logout-modal').style.display = 'none';
+}
+
+// Actual logout logic
+function confirmLogout() {
+    localStorage.clear();
+    // Use window.location.replace to prevent Android from getting stuck
+    window.location.replace("login.html");
 }
   </script>
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
