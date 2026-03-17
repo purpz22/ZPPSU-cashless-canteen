@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+  <div class="max-w-md w-full bg-white shadow-2xl rounded-3xl overflow-hidden p-8 text-center">
+    
+    <div id="status-icon" class="text-6xl mb-4">⏳</div>
+    <h2 id="status-title" class="text-3xl font-bold mb-2">Verifying Payment</h2>
+    <p id="status-desc" class="text-gray-500 mb-8">Please wait while the stall owner checks your GCash Reference Number.</p>
+    
+    <div class="bg-gray-100 p-4 rounded-xl text-left mb-8 text-sm">
+      <p><b>Order ID:</b> <span id="display-id" class="text-gray-600">...</span></p>
+      <p><b>Stall:</b> <span id="display-vendor" class="text-gray-600">...</span></p>
+      <p><b>Total:</b> <span id="display-total" class="font-bold text-red-700">...</span></p>
+    </div>
+
+    <button onclick="window.location.href='index.html'" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl">
+      Back to Home
+    </button>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('id');
+    document.getElementById('display-id').textContent = orderId.slice(0, 8).toUpperCase();
+
+    if(orderId) {
+      db.collection("orders").doc(orderId).onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById('display-vendor').textContent = data.vendorName;
+          document.getElementById('display-total').textContent = "₱" + data.total.toFixed(2);
+
+          const icon = document.getElementById('status-icon');
+          const title = document.getElementById('status-title');
+          const desc = document.getElementById('status-desc');
+
+          if(data.status === "pending") {
+            icon.textContent = "⏳";
+            title.textContent = "Verifying Payment";
+            title.className = "text-3xl font-bold mb-2 text-orange-500";
+            desc.textContent = "Waiting for the stall owner to accept your order.";
+          } 
+          else if(data.status === "accepted") {
+            icon.textContent = "✅";
+            title.textContent = "Order Accepted!";
+            title.className = "text-3xl font-bold mb-2 text-green-600";
+            desc.textContent = "Payment verified. They are now preparing your food!";
+          } 
+          else if(data.status === "declined") {
+            icon.textContent = "❌";
+            title.textContent = "Order Declined";
+            title.className = "text-3xl font-bold mb-2 text-red-600";
+            desc.textContent = "Payment not found or invalid Reference Number. Please see the counter.";
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

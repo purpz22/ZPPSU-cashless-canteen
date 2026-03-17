@@ -1,0 +1,130 @@
+/* ==================== ZPPSU CASHLESS CANTEEN CSS ==================== */
+
+:root {
+  --gcash-green: #00a651;
+  --maya-purple: #6f00ff;
+  --zppsu-red: #c8102e;
+}
+
+/* Global */
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.max-w-md {
+  max-width: 480px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--zppsu-red), #9c1328);
+  box-shadow: 0 4px 15px rgba(200, 16, 46, 0.3);
+}
+
+/* Menu Cards */
+.menu-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.menu-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+.menu-card img {
+  height: 180px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.food-name {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--zppsu-red);
+}
+
+/* Add to Cart Button */
+.add-btn {
+  background: var(--gcash-green);
+  transition: all 0.3s;
+}
+
+.add-btn:hover {
+  background: #008c44;
+  transform: scale(1.05);
+}
+
+/* Cart */
+.cart-item {
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.cart-total {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--zppsu-red);
+}
+
+/* Payment Buttons */
+.gcash-btn {
+  background: linear-gradient(90deg, #00a651, #00c76e);
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.maya-btn {
+  background: linear-gradient(90deg, #6f00ff, #9d4bff);
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.gcash-btn:hover, .maya-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(0, 166, 81, 0.4);
+}
+
+/* Status Badges */
+.status-paid {
+  background: #00a651;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .max-w-md {
+    max-width: 100%;
+    box-shadow: none;
+  }
+}
+
+/* Loading Spinner */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--zppsu-red);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
