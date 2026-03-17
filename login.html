@@ -7,27 +7,28 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+<!-- Added p-4 for side margins on mobile & min-h-[100dvh] for perfect vertical centering on phones -->
+<body class="bg-gray-50 flex items-center justify-center min-h-[100dvh] p-4">
   <div class="max-w-md w-full bg-white shadow-2xl rounded-3xl overflow-hidden">
     
-    <!-- Header -->
-    <div class="bg-red-700 text-white p-8 text-center">
-      <h1 class="text-4xl font-bold">ZPPSU</h1>
+    <!-- Header (Adjusted padding for smaller screens) -->
+    <div class="bg-red-700 text-white py-8 px-4 sm:p-8 text-center">
+      <h1 class="text-4xl font-bold tracking-wider">ZPPSU</h1>
       <p class="text-2xl mt-1">Food Court</p>
       <p class="text-sm mt-2 opacity-80">Cashless • GCash • Maya</p>
     </div>
 
     <!-- MAIN LOGIN (Student & Staff) -->
-    <div id="main-login-forms" class="p-8" style="display: block;">
+    <div id="main-login-forms" class="p-6 sm:p-8" style="display: block;">
       
       <!-- Student Login -->
       <div class="mb-8">
         <h2 class="text-xl font-bold text-gray-800 mb-4">🎓 Student Login</h2>
         <input type="text" id="studentNumber" 
                placeholder="ZPPSU Student Number (e.g. 2024-123)"
-               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-red-700">
+               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-red-700 transition-colors">
         <button onclick="studentLogin()" 
-                class="w-full mt-4 bg-red-700 hover:bg-red-800 py-4 rounded-2xl text-white font-bold text-xl">
+                class="w-full mt-4 bg-red-700 hover:bg-red-800 transition-colors py-4 rounded-2xl text-white font-bold text-xl shadow-md">
           Login as Student
         </button>
       </div>
@@ -39,45 +40,45 @@
         <h2 class="text-xl font-bold text-gray-800 mb-4">👨‍🍳 Stall Owner Login</h2>
         <input type="email" id="staffEmail" 
                placeholder="Staff Email"
-               class="w-full px-5 py-4 mb-3 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-green-600">
+               class="w-full px-5 py-4 mb-3 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-green-600 transition-colors">
         <input type="password" id="staffPassword" 
                placeholder="Password"
-               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-green-600">
+               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-green-600 transition-colors">
         
         <button onclick="staffLogin()" id="btn-staff-login"
-                class="w-full mt-4 bg-green-600 hover:bg-green-700 py-4 rounded-2xl text-white font-bold text-xl">
+                class="w-full mt-4 bg-green-600 hover:bg-green-700 transition-colors py-4 rounded-2xl text-white font-bold text-xl shadow-md">
           Secure Login as Staff
         </button>
       </div>
     </div>
 
     <!-- SECURE ADMIN LOGIN (Hidden by default) -->
-    <div id="admin-login-form" class="p-8" style="display: none;">
+    <div id="admin-login-form" class="p-6 sm:p-8" style="display: none;">
       <h2 class="text-2xl font-bold text-gray-800 mb-2">🛡️ Admin Portal</h2>
       <p class="text-sm text-gray-500 mb-6">Secure login via Firebase Auth</p>
       
       <input type="email" id="adminEmail" 
              placeholder="Admin Email"
-             class="w-full px-5 py-4 mb-3 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-blue-600">
+             class="w-full px-5 py-4 mb-3 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-blue-600 transition-colors">
              
       <input type="password" id="adminPassword" 
              placeholder="Password"
-             class="w-full px-5 py-4 mb-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-blue-600">
+             class="w-full px-5 py-4 mb-4 border border-gray-300 rounded-2xl text-lg focus:outline-none focus:border-blue-600 transition-colors">
              
       <button onclick="adminLogin()" id="btn-admin-login"
-              class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl text-white font-bold text-xl shadow-md">
+              class="w-full bg-blue-600 hover:bg-blue-700 transition-colors py-4 rounded-2xl text-white font-bold text-xl shadow-md">
         Secure Login
       </button>
       
-      <button onclick="toggleAdmin()" class="w-full mt-4 text-gray-500 font-bold hover:text-gray-800 py-2">
+      <button onclick="toggleAdmin()" class="w-full mt-4 text-gray-500 font-bold hover:text-gray-800 py-2 transition-colors">
         ← Back to Main Login
       </button>
     </div>
 
     <!-- Footer with hidden toggle -->
-    <div class="bg-gray-50 p-6 flex justify-between items-center text-xs text-gray-500">
+    <div class="bg-gray-50 p-6 flex justify-between items-center text-xs text-gray-500 border-t border-gray-100">
       <span>ZPPSU Cashless Canteen © 2026</span>
-      <button onclick="toggleAdmin()" class="font-bold hover:text-red-700 cursor-pointer">Admin Panel</button>
+      <button onclick="toggleAdmin()" class="font-bold hover:text-red-700 cursor-pointer transition-colors">Admin Panel</button>
     </div>
   </div>
 
@@ -88,7 +89,6 @@
   <script src="assets/js/firebase-config.js"></script>
   
   <script>
-    // Focus on student input when page loads
     window.onload = () => {
       document.getElementById('studentNumber').focus();
     };
@@ -115,15 +115,12 @@
       btn.disabled = true;
 
       try {
-        // 1. Log in via Firebase Auth
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // 2. Find which stall belongs to this email in Firestore
         const snapshot = await db.collection('vendors').where('email', '==', user.email).get();
 
         if (!snapshot.empty) {
-          // Success! We found the stall.
           const stallDoc = snapshot.docs[0];
           localStorage.setItem('role', 'staff');
           localStorage.setItem('vendorId', stallDoc.id);
@@ -143,23 +140,19 @@
       }
     }
 
-    // Toggle between Main Login and Admin Login
     function toggleAdmin() {
       const mainForm = document.getElementById('main-login-forms');
       const adminForm = document.getElementById('admin-login-form');
       
       if (mainForm.style.display === 'block') {
-        // Hide Main, Show Admin
         mainForm.style.display = 'none';
         adminForm.style.display = 'block';
       } else {
-        // Show Main, Hide Admin
         mainForm.style.display = 'block';
         adminForm.style.display = 'none';
       }
     }
 
-    // SECURE FIREBASE ADMIN LOGIN
     async function adminLogin() {
       const email = document.getElementById('adminEmail').value.trim();
       const password = document.getElementById('adminPassword').value;
@@ -182,23 +175,20 @@
       }
     }
 
-    // Function to show the custom modal
-function showLogoutModal() {
-    document.getElementById('logout-modal').style.display = 'flex';
-}
+    function showLogoutModal() {
+        document.getElementById('logout-modal').style.display = 'flex';
+    }
 
-// Function to hide the custom modal
-function hideLogoutModal() {
-    document.getElementById('logout-modal').style.display = 'none';
-}
+    function hideLogoutModal() {
+        document.getElementById('logout-modal').style.display = 'none';
+    }
 
-// Actual logout logic
-function confirmLogout() {
-    localStorage.clear();
-    // Use window.location.replace to prevent Android from getting stuck
-    window.location.replace("login.html");
-}
+    function confirmLogout() {
+        localStorage.clear();
+        window.location.replace("login.html");
+    }
   </script>
+  
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:20px; width:80%; max-width:300px; text-align:center;">
         <p style="color:black; font-weight:bold; margin-bottom:20px;">Are you sure you want to log out?</p>
@@ -207,6 +197,6 @@ function confirmLogout() {
             <button onclick="confirmLogout()" style="flex:1; padding:10px; border-radius:10px; border:none; background:#dc2626; color:white;">Yes</button>
         </div>
     </div>
-</div>
+  </div>
 </body>
 </html>
