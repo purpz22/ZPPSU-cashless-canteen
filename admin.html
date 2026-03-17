@@ -40,6 +40,18 @@
       </button>
     </div>
 
+    <!-- THE PURPLE BOX: AI Settings -->
+    <div class="bg-purple-50 p-6 rounded-2xl mb-8 border border-purple-200 shadow-inner">
+      <h2 class="text-xl font-bold mb-2 text-purple-800">🤖 AI Assistant Knowledge</h2>
+      <p class="text-xs text-gray-500 mb-4">Teach the AI about ZPPSU, the food court, and how it should behave. The students will chat with this AI.</p>
+      
+      <textarea id="ai-prompt" rows="4" placeholder="Example: You are a friendly AI for ZPPSU Canteen. We sell Rice Meals at Jollibee and Drinks at Stall 2. Be polite..." class="w-full p-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 text-sm"></textarea>
+      
+      <button onclick="saveAiPrompt()" id="btn-save-ai" class="mt-4 bg-purple-600 hover:bg-purple-700 transition-colors text-white font-bold py-3 px-6 rounded-xl w-full shadow-md">
+        Save AI Knowledge
+      </button>
+    </div>
+
     <!-- Vendor List -->
     <h2 class="text-xl font-bold mb-4 text-gray-800">🏪 Existing Stalls</h2>
     <div id="admin-vendor-list" class="space-y-4">
@@ -104,7 +116,7 @@
   <script src="assets/js/firebase-config.js"></script>
 
   <script>
-    let cachedVendors = {}; // Stores vendor data temporarily so we can load it into the edit modal
+    let cachedVendors = {};
 
     window.onload = () => {
       if (localStorage.getItem('role') !== 'admin') {
@@ -112,12 +124,42 @@
         return;
       }
       loadVendors();
+      loadAiPrompt(); // <-- This loads the saved AI text when you open the page
     };
+
+    // --- AI PROMPT LOGIC ---
+    async function loadAiPrompt() {
+      try {
+        const doc = await db.collection('settings').doc('ai_prompt').get();
+        if (doc.exists) {
+          document.getElementById('ai-prompt').value = doc.data().text;
+        }
+      } catch (e) {
+        console.error("Error loading prompt", e);
+      }
+    }
+
+    async function saveAiPrompt() {
+      const promptText = document.getElementById('ai-prompt').value.trim();
+      const btn = document.getElementById('btn-save-ai');
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+      
+      try {
+        await db.collection('settings').doc('ai_prompt').set({ text: promptText });
+        alert("AI Knowledge updated successfully!");
+      } catch (error) {
+        alert("Error saving AI prompt.");
+      }
+      
+      btn.innerText = "Save AI Knowledge";
+      btn.disabled = false;
+    }
 
     // --- FETCH VENDORS ---
     async function loadVendors() {
       const list = document.getElementById('admin-vendor-list');
-      cachedVendors = {}; // Reset cache
+      cachedVendors = {}; 
       
       try {
         const snapshot = await db.collection('vendors').get();
@@ -130,24 +172,24 @@
         let html = '';
         snapshot.forEach(doc => {
           const data = doc.data();
-          cachedVendors[doc.id] = data; // Save to cache for editing
+          cachedVendors[doc.id] = data; 
 
           html += `
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between items-center hover:shadow-md transition-shadow gap-4">
-              <div class="flex items-center gap-4 w-full overflow-hidden">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-md transition-shadow gap-4">
+              <div class="flex items-center gap-4 overflow-hidden w-full">
                 <img src="${data.logoUrl || 'https://via.placeholder.com/150'}" class="w-16 h-16 rounded-xl object-cover border-2 border-gray-100 flex-shrink-0">
-                <div class="truncate w-full">
+                <div class="truncate">
                   <h3 class="font-bold text-lg text-gray-800 truncate">${data.name}</h3>
                   <p class="text-xs text-gray-500">ID: <span class="font-mono text-blue-600">${doc.id}</span></p>
                   <p class="text-xs text-gray-500 truncate">Email: ${data.email}</p>
                 </div>
               </div>
               
-              <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="openEditModal('${doc.id}')" class="flex-1 sm:flex-none bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-3 rounded-xl font-bold transition-colors">
+              <div class="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                <button onclick="openEditModal('${doc.id}')" class="flex-1 sm:flex-none bg-blue-50 hover:bg-blue-100 text-blue-600 px-5 py-2.5 rounded-xl font-bold transition-colors text-sm flex justify-center items-center gap-2">
                   ✏️ Edit
                 </button>
-                <button onclick="deleteVendor('${doc.id}')" class="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 px-4 py-3 rounded-xl font-bold transition-colors">
+                <button onclick="deleteVendor('${doc.id}')" class="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl font-bold transition-colors text-sm flex justify-center items-center gap-2">
                   🗑️ Delete
                 </button>
               </div>
@@ -189,7 +231,6 @@
 
         alert("Stall created successfully!");
         
-        // Clear inputs
         ['v-id', 'v-name', 'v-email', 'v-logo', 'v-qr'].forEach(id => document.getElementById(id).value = '');
         
         loadVendors(); 
@@ -207,11 +248,10 @@
       const vendor = cachedVendors[id];
       if (!vendor) return alert("Error fetching vendor details.");
 
-      document.getElementById('edit-v-id').value = id; // Cannot change ID
+      document.getElementById('edit-v-id').value = id; 
       document.getElementById('edit-v-name').value = vendor.name;
       document.getElementById('edit-v-email').value = vendor.email;
       
-      // Clear file inputs (only update if user selects a new file)
       document.getElementById('edit-v-logo').value = '';
       document.getElementById('edit-v-qr').value = '';
 
@@ -238,7 +278,6 @@
       try {
         let updatePayload = { name: name, email: email };
 
-        // If user uploaded a new image, compress it and add to payload. Otherwise, Firestore keeps the old one.
         if (logoFile) updatePayload.logoUrl = await compressImage(logoFile, 500);
         if (qrFile) updatePayload.qrUrl = await compressImage(qrFile, 500);
 
@@ -246,7 +285,7 @@
         
         alert("Stall updated successfully!");
         closeEditModal();
-        loadVendors(); // Refresh UI to show changes
+        loadVendors(); 
       } catch (error) {
         console.error("Error updating vendor:", error);
         alert("Error updating stall.");

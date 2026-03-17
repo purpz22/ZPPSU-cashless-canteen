@@ -32,6 +32,39 @@
     </div>
   </div>
 
+  <!-- Floating AI Chat Button -->
+<button onclick="toggleChat()" class="fixed bottom-24 right-4 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-2xl z-40 transition-transform transform hover:scale-105 border-4 border-white">
+  <span class="text-2xl">🤖</span>
+</button>
+
+<!-- AI Chat Window (Hidden by default) -->
+<div id="ai-chat-window" class="fixed bottom-24 right-4 sm:right-4 w-[90%] sm:w-80 h-[400px] bg-white rounded-3xl shadow-2xl z-50 flex flex-col hidden overflow-hidden border border-gray-200">
+  
+  <!-- Chat Header -->
+  <div class="bg-purple-600 text-white p-4 flex justify-between items-center shadow-md">
+    <div>
+      <h3 class="font-bold text-lg">ZPPSU AI Guide</h3>
+      <p class="text-xs opacity-80">Ask me about food & campus!</p>
+    </div>
+    <button onclick="toggleChat()" class="text-white hover:text-gray-200 font-bold text-xl">✖</button>
+  </div>
+  
+  <!-- Chat Messages Area -->
+  <div id="chat-box" class="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3 text-sm">
+    <div class="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm">
+      Hello! I'm the ZPPSU AI Assistant. What are you craving today?
+    </div>
+  </div>
+  
+  <!-- Chat Input -->
+  <div class="p-3 bg-white border-t flex gap-2 items-center">
+    <input type="text" id="chat-input" placeholder="Ask something..." class="flex-1 p-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" onkeypress="handleEnter(event)">
+    <button onclick="sendMessage()" class="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl shadow-md transition-colors">
+      ➤
+    </button>
+  </div>
+</div>
+
   <!-- Firebase + JS -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -80,5 +113,97 @@
         </div>
     </div>
   </div>
+
+  <script>
+  // Get a free API key from: https://aistudio.google.com/app/apikey
+  const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+  
+  let adminPrompt = "You are a helpful AI assistant for ZPPSU Canteen.";
+
+  // Fetch the custom Admin Prompt from Firebase when app loads
+  async function fetchAdminPrompt() {
+    try {
+      const doc = await db.collection('settings').doc('ai_prompt').get();
+      if (doc.exists) adminPrompt = doc.data().text;
+    } catch (e) { console.error("Could not fetch AI prompt"); }
+  }
+  fetchAdminPrompt(); // Run immediately
+
+  // Show / Hide Chat window
+  function toggleChat() {
+    const chat = document.getElementById('ai-chat-window');
+    chat.classList.toggle('hidden');
+  }
+
+  // Handle Enter keypress
+  function handleEnter(e) {
+    if (e.key === 'Enter') sendMessage();
+  }
+
+  // Send message to AI
+  async function sendMessage() {
+    const inputField = document.getElementById('chat-input');
+    const message = inputField.value.trim();
+    if (!message) return;
+
+    const chatBox = document.getElementById('chat-box');
+
+    // 1. Print Student's Message
+    chatBox.innerHTML += `
+      <div class="bg-purple-600 text-white p-3 rounded-2xl rounded-tr-none self-end max-w-[85%] shadow-sm ml-auto">
+        ${message}
+      </div>
+    `;
+    inputField.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. Print "Thinking..." indicator
+    const loadingId = "load-" + Date.now();
+    chatBox.innerHTML += `
+      <div id="${loadingId}" class="bg-gray-200 text-gray-500 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] animate-pulse">
+        Thinking...
+      </div>
+    `;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 3. Request AI Response from Google Gemini API
+    try {
+      // Combine Admin rules + Student question
+      const fullPrompt = `${adminPrompt}\n\nStudent asks: ${message}\nAI Answer:`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyANH7276wLbgjQzXhfWP3_7OseZ6x_ojr4`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: fullPrompt }] }]
+        })
+      });
+
+      const data = await response.json();
+      const aiReply = data.candidates[0].content.parts[0].text;
+
+      // 4. Remove "Thinking" and Print AI Answer
+      document.getElementById(loadingId).remove();
+      
+      // Basic formatting to replace line breaks with <br> tags
+      const formattedReply = aiReply.replace(/\n/g, '<br>');
+
+      chatBox.innerHTML += `
+        <div class="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm">
+          ${formattedReply}
+        </div>
+      `;
+    } catch (error) {
+      document.getElementById(loadingId).remove();
+      chatBox.innerHTML += `
+        <div class="bg-red-100 text-red-600 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] text-xs">
+          Connection Error. Did you add the Gemini API Key?
+        </div>
+      `;
+    }
+    
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
 </body>
 </html>
