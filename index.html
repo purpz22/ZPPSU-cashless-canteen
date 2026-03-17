@@ -7,23 +7,27 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-gray-50">
-  <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl">
-<!-- Updated Header with Logout Button -->
-    <header class="bg-red-700 text-white p-4 flex justify-between items-center shadow-md">
+<body class="bg-gray-50 min-h-[100dvh]">
+  <div class="max-w-md mx-auto bg-white min-h-[100dvh] shadow-xl relative pb-20">
+    
+    <!-- Updated Header with Top Padding (pt-10) for Mobile Status Bars -->
+    <header class="bg-red-700 text-white px-5 pt-10 pb-5 flex justify-between items-center shadow-md rounded-b-2xl">
       <div>
-        <h1 class="text-2xl font-bold">ZPPSU CANTEEN</h1>
-        <p class="text-sm opacity-90">Menu</p>
+        <h1 class="text-2xl font-bold tracking-wide">ZPPSU CANTEEN</h1>
+        <p class="text-sm opacity-90 font-medium mt-1">Cashless Menu</p>
       </div>
-      <button onclick="document.getElementById('logout-modal').style.display = 'flex'">
+      <button onclick="showLogoutModal()" class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
         🚪 Logout
       </button>
-    </header>    <div id="content" class="p-4"></div>
+    </header>    
+
+    <!-- Added pb-24 so the floating cart doesn't block the bottom content -->
+    <div id="content" class="p-5 pb-24"></div>
 
     <!-- Floating Cart -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 max-w-md mx-auto">
-      <button onclick="showCart()" class="w-full bg-green-600 text-white py-4 rounded-xl text-lg font-bold">
-        Cart (<span id="cart-count">0</span>)
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 max-w-md mx-auto rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <button onclick="showCart()" class="w-full bg-green-600 hover:bg-green-700 transition-colors text-white py-4 rounded-2xl text-lg font-bold shadow-md">
+        View Cart (<span id="cart-count">0</span>)
       </button>
     </div>
   </div>
@@ -38,6 +42,7 @@
   <script src="assets/js/cart.js"></script>
   <script src="assets/js/payment.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  
   <script>
     // Auto load vendors when page opens
     window.onload = () => {
@@ -47,47 +52,33 @@
       }
       loadVendors();
     };
-     // ADD THIS LOGOUT FUNCTION
-function logout() {
-  if (confirm("Are you sure you want to log out?")) {
-    localStorage.clear();
-    
-    if (typeof Android !== 'undefined') {
-        window.location.href = "login.html"; 
-    } else {
-        window.location.href = "login.html";
+
+    // Function to show the custom modal
+    function showLogoutModal() {
+        document.getElementById('logout-modal').style.display = 'flex';
     }
-    setTimeout(() => {
+
+    // Function to hide the custom modal
+    function hideLogoutModal() {
+        document.getElementById('logout-modal').style.display = 'none';
+    }
+
+    // Actual logout logic
+    function confirmLogout() {
+        localStorage.clear();
         window.location.replace("login.html");
-    }, 100);
-  }
-}
-
-// Function to show the custom modal
-function showLogoutModal() {
-    document.getElementById('logout-modal').style.display = 'flex';
-}
-
-// Function to hide the custom modal
-function hideLogoutModal() {
-    document.getElementById('logout-modal').style.display = 'none';
-}
-
-// Actual logout logic
-function confirmLogout() {
-    localStorage.clear();
-    // Use window.location.replace to prevent Android from getting stuck
-    window.location.replace("login.html");
-}
+    }
   </script>
+
+  <!-- Logout Modal -->
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:white; padding:20px; border-radius:20px; width:80%; max-width:300px; text-align:center;">
-        <p style="color:black; font-weight:bold; margin-bottom:20px;">Are you sure you want to log out?</p>
-        <div style="display:flex; gap:10px;">
-            <button onclick="hideLogoutModal()" style="flex:1; padding:10px; border-radius:10px; border:none; background:#ccc;">Cancel</button>
-            <button onclick="confirmLogout()" style="flex:1; padding:10px; border-radius:10px; border:none; background:#dc2626; color:white;">Yes</button>
+    <div style="background:white; padding:24px; border-radius:24px; width:80%; max-width:320px; text-align:center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <p style="color:black; font-weight:bold; font-size: 1.125rem; margin-bottom:24px;">Are you sure you want to log out?</p>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideLogoutModal()" style="flex:1; padding:12px; border-radius:12px; border:none; background:#e5e7eb; color:#374151; font-weight:bold;">Cancel</button>
+            <button onclick="confirmLogout()" style="flex:1; padding:12px; border-radius:12px; border:none; background:#dc2626; color:white; font-weight:bold;">Yes, Logout</button>
         </div>
     </div>
-</div>
+  </div>
 </body>
 </html>
