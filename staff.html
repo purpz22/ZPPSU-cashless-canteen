@@ -229,12 +229,20 @@
       btn.disabled = false;
     }
 
-    function logout() {
-      auth.signOut().then(() => {
-        localStorage.clear();
-        window.location.href = 'login.html';
-      });
+function logout() {
+  if (confirm("Are you sure you want to log out?")) {
+    localStorage.clear();
+    
+    if (typeof Android !== 'undefined') {
+        window.location.href = "login.html"; 
+    } else {
+        window.location.href = "login.html";
     }
+    setTimeout(() => {
+        window.location.replace("login.html");
+    }, 100);
+  }
+}
   </script>
 </body>
 </html>
