@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel - ZPPSU</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    if (localStorage.getItem('role') !== 'admin') {
+      window.location.replace('login.html');
+    }
+  </script>
 </head>
 <body class="bg-gray-100 p-6 min-h-[100dvh]">
   <div class="max-w-4xl mx-auto bg-white p-6 rounded-3xl shadow-xl">
@@ -118,15 +123,18 @@
   <script>
     let cachedVendors = {};
 
-    window.onload = () => {
-      if (localStorage.getItem('role') !== 'admin') {
-        window.location.href = 'login.html';
-        return;
-      }
+    // SECURE FIREBASE AUTHENTICATION CHECK
+document.addEventListener("DOMContentLoaded", () => {
+  auth.onAuthStateChanged((user) => {
+    if (user && localStorage.getItem('role') === 'admin') {
       loadVendors();
-      loadAiPrompt(); // <-- This loads the saved AI text when you open the page
-    };
-
+      loadAiPrompt();
+    } else {
+      localStorage.clear();
+      window.location.replace('login.html');
+    }
+  });
+});
     // --- AI PROMPT LOGIC ---
     async function loadAiPrompt() {
       try {
