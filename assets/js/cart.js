@@ -3,6 +3,38 @@ let currentVendorId = null;
 
 document.addEventListener("DOMContentLoaded", updateCartCount);
 
+// --- NEW: Custom Toast Notification System ---
+function showToast(message, type = 'success') {
+  // Remove existing toast if there is one to prevent stacking
+  const existingToast = document.getElementById('custom-toast');
+  if (existingToast) existingToast.remove();
+
+  const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+  const icon = type === 'success' ? '✅' : '⚠️';
+
+  const toast = document.createElement('div');
+  toast.id = 'custom-toast';
+  // Tailwind classes for a modern, floating, animated pill
+  toast.className = `fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[10000] text-white font-bold flex items-center gap-2 transition-all duration-300 opacity-0 -translate-y-5 ${bgColor}`;
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  
+  document.body.appendChild(toast);
+  
+  // Trigger animation in
+  setTimeout(() => {
+    toast.classList.remove('opacity-0', '-translate-y-5');
+    toast.classList.add('opacity-100', 'translate-y-0');
+  }, 10);
+
+  // Trigger animation out and remove after 2.5 seconds
+  setTimeout(() => {
+    toast.classList.remove('opacity-100', 'translate-y-0');
+    toast.classList.add('opacity-0', '-translate-y-5');
+    setTimeout(() => toast.remove(), 300); // Wait for fade out to finish
+  }, 2500);
+}
+// ---------------------------------------------
+
 function addToCart(item) {
   currentVendorId = localStorage.getItem('currentVendorId');
   const existing = cart.find(i => i.id === item.id);
@@ -15,10 +47,11 @@ function addToCart(item) {
 
   saveCart();
   updateCartCount();
-  alert(`${item.name} added to cart!`);
+  
+  // Replaced alert() with Toast
+  showToast(`${item.name} added to cart!`, 'success');
 }
 
-// NEW: Function to remove a specific item from the cart
 function removeFromCart(itemId) {
   cart = cart.filter(item => item.id !== itemId);
   saveCart();
@@ -29,7 +62,8 @@ function removeFromCart(itemId) {
   if (cart.length > 0) {
     showCart();
   } else {
-    alert("Your cart is now empty.");
+    // Replaced alert() with Toast
+    showToast("Your cart is now empty.", 'error');
   }
 }
 
@@ -44,14 +78,17 @@ function updateCartCount() {
 }
 
 function showCart() {
-  if (cart.length === 0) return alert("Your cart is empty!");
+  if (cart.length === 0) {
+    // Replaced alert() with Toast
+    showToast("Your cart is empty!", 'error');
+    return;
+  }
   
   const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
   const vendorId = cart[0].vendorId;
   const vendorName = localStorage.getItem('currentVendorName');
   const vendorQR = localStorage.getItem('currentVendorQR') || 'https://via.placeholder.com/250?text=No+QR+Uploaded';
   
-  // UPDATED: Added a "Remove" button layout to the items list
   let itemsHtml = cart.map(item => `
     <div class="flex justify-between items-center border-b py-3">
       <div>
