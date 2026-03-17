@@ -32,27 +32,34 @@
     </div>
   </div>
 
-  <!-- Floating AI Chat Button -->
-<button onclick="toggleChat()" class="fixed bottom-24 right-4 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-2xl z-40 transition-transform transform hover:scale-105 border-4 border-white">
-  <span class="text-2xl">🤖</span>
+<!-- Floating AI Chat Button -->
+<button onclick="toggleChat()" class="fixed bottom-24 right-4 bg-white p-1 rounded-full shadow-2xl z-40 transition-transform transform hover:scale-110 border-4 border-purple-600 focus:outline-none flex items-center justify-center">
+  <!-- CHANGE THE 'src' LINK BELOW TO YOUR OWN IMAGE IF YOU WANT -->
+  <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ZPPSU&backgroundColor=c084fc" alt="AI Bot" class="w-12 h-12 rounded-full object-cover">
 </button>
 
 <!-- AI Chat Window (Hidden by default) -->
 <div id="ai-chat-window" class="fixed bottom-24 right-4 sm:right-4 w-[90%] sm:w-80 h-[400px] bg-white rounded-3xl shadow-2xl z-50 flex flex-col hidden overflow-hidden border border-gray-200">
   
-  <!-- Chat Header -->
+  <!-- Chat Header (Now includes the avatar image!) -->
   <div class="bg-purple-600 text-white p-4 flex justify-between items-center shadow-md">
-    <div>
-      <h3 class="font-bold text-lg">ZPPSU AI Guide</h3>
-      <p class="text-xs opacity-80">Ask me about food & campus!</p>
+    <div class="flex items-center gap-3">
+      <!-- SAME IMAGE HERE -->
+      <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ZPPSU&backgroundColor=c084fc" alt="AI Bot" class="w-10 h-10 rounded-full border-2 border-white bg-white">
+      <div>
+        <h3 class="font-bold text-lg leading-tight">ZPPSU AI</h3>
+        <p class="text-xs opacity-90">Ask me about food!</p>
+      </div>
     </div>
-    <button onclick="toggleChat()" class="text-white hover:text-gray-200 font-bold text-xl">✖</button>
+    <button onclick="toggleChat()" class="text-white hover:text-gray-200 font-bold text-xl transition-colors">✖</button>
   </div>
   
   <!-- Chat Messages Area -->
   <div id="chat-box" class="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3 text-sm">
-    <div class="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm">
-      Hello! I'm the ZPPSU AI Assistant. What are you craving today?
+    <div class="bg-white border border-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm flex items-start gap-2">
+      <!-- Tiny Avatar next to the welcome message -->
+      <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ZPPSU&backgroundColor=c084fc" class="w-6 h-6 rounded-full flex-shrink-0 mt-0.5">
+      <span>Hello! I'm the ZPPSU AI Assistant. What are you craving today?</span>
     </div>
   </div>
   
