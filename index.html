@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+  
   <title>ZPPSU Cashless Canteen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/style.css">
@@ -85,14 +86,43 @@
   
   <script>
     // Auto load vendors when page opens
-    window.onload = () => {
-      if (localStorage.getItem('role') !== 'student') {
-        window.location.href = 'login.html';
-        return;
-      }
-      loadVendors();
-    };
+   window.onload = () => {
+  if (localStorage.getItem('role') !== 'student') {
+    window.location.href = 'login.html';
+    return;
+  }
+  loadVendors();
+  requestNotificationPermission(); 
+  initStatusListener();             
+};
 
+async function initStatusListener() {
+    const studentNumber = localStorage.getItem('studentNumber');
+    if (!studentNumber) return;
+
+    // Listen to orders for this student
+    db.collection("orders")
+        .where("studentNumber", "==", studentNumber)
+        .orderBy("timestamp", "desc")
+        .limit(1) // Only watch the most recent order
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "modified") {
+                    const order = change.doc.data();
+                    
+                    if (order.status === "accepted") {
+                        if (typeof AndroidInterface !== 'undefined') {
+                            // This triggers your Android app's Toast/Notification
+                            AndroidInterface.triggerAndroidNotification("Order Ready", "You can pick up now your order!");
+                        } else {
+                            // This is the fallback for browsers (Chrome/Edge)
+                            alert("You can pick up now your order!");
+                        }
+                    }
+                }
+            });
+        });
+}
     // Function to show the custom modal
     function showLogoutModal() {
         document.getElementById('logout-modal').style.display = 'flex';
