@@ -93,7 +93,25 @@
   }
   loadVendors();
   requestNotificationPermission(); 
-  initStatusListener();             
+  initStatusListener();
+  const activeOrder = localStorage.getItem('activeOrderId');
+if (activeOrder) {
+    // Check if the order still exists
+    db.collection("orders").doc(activeOrder).get().then(doc => {
+        if (doc.exists) {
+            // Create a tracking banner at the top of the screen
+            const banner = `
+              <div onclick="window.location.href='status.html?id=${activeOrder}'" 
+                   class="bg-orange-500 text-white p-4 m-4 rounded-xl font-bold text-center shadow-lg cursor-pointer animate-pulse">
+                🔔 You have an active order! Click here to track it.
+              </div>`;
+            document.getElementById('content').insertAdjacentHTML('beforebegin', banner);
+        } else {
+            // Order was deleted by staff, clear it from phone
+            localStorage.removeItem('activeOrderId');
+        }
+    });
+}
 };
 
 async function initStatusListener() {

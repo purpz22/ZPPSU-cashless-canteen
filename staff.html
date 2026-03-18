@@ -78,7 +78,7 @@
     }
 
     // Load Live Orders
-    db.collection("orders").where("vendorId", "==", myVendorId).onSnapshot(snapshot => {
+       db.collection("orders").where("vendorId", "==", myVendorId).onSnapshot(snapshot => {
       const ordersList = document.getElementById('orders-list');
       ordersList.innerHTML = "";
       if (snapshot.empty) return ordersList.innerHTML = "<p class='text-center text-gray-500 mt-10'>No orders yet.</p>";
@@ -89,11 +89,21 @@
 
       docs.forEach(order => {
         let itemsList = order.items.map(i => `${i.qty}x ${i.name}`).join('<br>');
-        let actionButtons = order.status === "pending" ? `
-          <div class="flex gap-2 mt-4">
-            <button onclick="updateStatus('${order.id}', 'accepted')" class="flex-1 bg-green-600 text-white py-2 rounded-xl font-bold">✅ Accept</button>
-            <button onclick="updateStatus('${order.id}', 'declined')" class="flex-1 bg-red-100 text-red-700 py-2 rounded-xl font-bold">❌ Decline</button>
-          </div>` : '';
+        
+        // LOGIC FOR BUTTONS: If pending, show Accept/Decline. Else, show Delete.
+        let actionButtons = "";
+        if (order.status === "pending") {
+          actionButtons = `
+            <div class="flex gap-2 mt-4">
+              <button onclick="updateStatus('${order.id}', 'accepted')" class="flex-1 bg-green-600 text-white py-2 rounded-xl font-bold">✅ Accept</button>
+              <button onclick="updateStatus('${order.id}', 'declined')" class="flex-1 bg-red-100 text-red-700 py-2 rounded-xl font-bold">❌ Decline</button>
+            </div>`;
+        } else {
+          actionButtons = `
+            <button onclick="deleteOrder('${order.id}')" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl text-sm font-bold shadow-sm">
+              🗑️ Remove Order from History
+            </button>`;
+        }
 
         ordersList.innerHTML += `
           <div class="border-2 p-4 rounded-2xl bg-white mb-4 ${order.status === 'pending' ? 'border-orange-300' : 'border-gray-100'}">
@@ -114,6 +124,13 @@
     function updateStatus(id, status) { 
       if(status === 'declined' && !confirm("Decline this order?")) return;
       db.collection("orders").doc(id).update({ status: status }); 
+    }
+
+    // NEW FUNCTION: Delete Order
+    async function deleteOrder(id) {
+      if(confirm("Are you sure you want to remove this order from your list?")) {
+        await db.collection("orders").doc(id).delete();
+      }
     }
 
     // Load Menu

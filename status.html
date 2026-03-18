@@ -26,47 +26,71 @@
 
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="assets/js/firebase-config.js"></script>
   
   <script>
+    // Get ID from URL or from LocalStorage (if they reopened the app)
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('id');
-    document.getElementById('display-id').textContent = orderId.slice(0, 8).toUpperCase();
+    let orderId = urlParams.get('id') || localStorage.getItem('activeOrderId');
+    
+    let hasBeenNotified = false; // Prevent notification spam
 
-    if(orderId) {
-      db.collection("orders").doc(orderId).onSnapshot((doc) => {
-        if (doc.exists) {
-          const data = doc.data();
-          document.getElementById('display-vendor').textContent = data.vendorName;
-          document.getElementById('display-total').textContent = "₱" + data.total.toFixed(2);
+    if (!orderId) {
+        window.location.href = 'index.html'; // Go home if no order
+    } else {
+        document.getElementById('display-id').textContent = orderId.slice(0, 8).toUpperCase();
+        
+        // Listen to the order live
+        db.collection("orders").doc(orderId).onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('display-vendor').textContent = data.vendorName;
+                document.getElementById('display-total').textContent = "₱" + data.total.toFixed(2);
 
-          const icon = document.getElementById('status-icon');
-          const title = document.getElementById('status-title');
-          const desc = document.getElementById('status-desc');
+                const icon = document.getElementById('status-icon');
+                const title = document.getElementById('status-title');
+                const desc = document.getElementById('status-desc');
 
-          if(data.status === "pending") {
-            icon.textContent = "⏳";
-            title.textContent = "Verifying Payment";
-            title.className = "text-3xl font-bold mb-2 text-orange-500";
-            desc.textContent = "Waiting for the stall owner to accept your order.";
-          } 
-          else if(data.status === "accepted") {
-            icon.textContent = "✅";
-            title.textContent = "Order Accepted!";
-            title.className = "text-3xl font-bold mb-2 text-green-600";
-            desc.textContent = "Payment verified. They are now preparing your food!";
-          } 
-          else if(data.status === "declined") {
-            icon.textContent = "❌";
-            title.textContent = "Order Declined";
-            title.className = "text-3xl font-bold mb-2 text-red-600";
-            desc.textContent = "Payment not found or invalid Reference Number. Please see the counter.";
-          }
-        }
-      });
+                if (data.status === "pending") {
+                    icon.textContent = "⏳";
+                    title.textContent = "Verifying Payment";
+                    title.className = "text-3xl font-bold mb-2 text-orange-500";
+                    desc.textContent = "Waiting for the stall owner to accept your order.";
+                } 
+                else if (data.status === "accepted") {
+                    icon.textContent = "✅";
+                    title.textContent = "Order Ready!";
+                    title.className = "text-3xl font-bold mb-2 text-green-600";
+                    desc.textContent = "Your food is ready. Please pick it up at the counter!";
+                    
+                    // --- TRIGGER ANDROID NOTIFICATION ---
+                    if (!hasBeenNotified) {
+                        if (typeof AndroidInterface !== 'undefined') {
+                            AndroidInterface.triggerAndroidNotification("ZPPSU Canteen", "Your food is ready! Pick it up now.");
+                        } else {
+                            alert("Your food is ready! Pick it up now.");
+                        }
+                        hasBeenNotified = true; // Mark as notified
+                    }
+                } 
+                else if (data.status === "declined") {
+                    icon.textContent = "❌";
+                    title.textContent = "Order Declined";
+                    title.className = "text-3xl font-bold mb-2 text-red-600";
+                    desc.textContent = "Payment not verified. Please see the counter.";
+                    localStorage.removeItem('activeOrderId'); // Clear from phone
+                }
+            } else {
+                // If the staff clicks "Remove Order", it deletes it from DB.
+                // We must send the student back home.
+                alert("This order has been completed and closed.");
+                localStorage.removeItem('activeOrderId');
+                window.location.href = "index.html";
+            }
+        });
     }
   </script>
-</body>
+  </body>
 </html>

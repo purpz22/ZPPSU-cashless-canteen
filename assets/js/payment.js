@@ -54,6 +54,7 @@ async function processPayment() {
     });
 
     localStorage.removeItem('cart');
+    localStorage.setItem('activeOrderId', docRef.id); // <--- SAVE THE ORDER ID
     window.location.href = `status.html?id=${docRef.id}`;
     
   } catch (error) {
