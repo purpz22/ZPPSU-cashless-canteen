@@ -63,10 +63,17 @@
   <script src="assets/js/firebase-config.js"></script>
   
   <script>
+
+    
+
     const myVendorId = localStorage.getItem('vendorId');
     if(!myVendorId) window.location.href = 'login.html';
 
     document.getElementById('staff-title').textContent = myVendorId.toUpperCase();
+
+    if (typeof AndroidInterface !== 'undefined' && AndroidInterface.requestBatteryExemption) {
+        AndroidInterface.requestBatteryExemption();
+    }
 
     // Tab Navigation Logic
     function showTab(tab) {
@@ -78,7 +85,29 @@
     }
 
     // Load Live Orders
-       db.collection("orders").where("vendorId", "==", myVendorId).onSnapshot(snapshot => {
+let initialLoad = true; // Prevents notifying for old orders when the app first opens
+
+    // Load Live Orders & Listen for New Ones
+    db.collection("orders").where("vendorId", "==", myVendorId).onSnapshot(snapshot => {
+      
+      // 1. CHECK FOR NEW ORDERS (For Notifications)
+      snapshot.docChanges().forEach(change => {
+          if (change.type === "added" && !initialLoad) {
+              const newOrder = change.doc.data();
+              // Trigger Android Notification over TikTok
+              if (typeof AndroidInterface !== 'undefined') {
+                  AndroidInterface.triggerAndroidNotification(
+                      "🔔 NEW ORDER RECEIVED!", 
+                      "Student " + newOrder.studentNumber + " sent ₱" + newOrder.total.toFixed(2)
+                  );
+              } else {
+                  alert("New Order Received!");
+              }
+          }
+      });
+      initialLoad = false; // Initial load is done
+
+      // 2. RENDER THE ORDERS LIST
       const ordersList = document.getElementById('orders-list');
       ordersList.innerHTML = "";
       if (snapshot.empty) return ordersList.innerHTML = "<p class='text-center text-gray-500 mt-10'>No orders yet.</p>";
@@ -90,7 +119,6 @@
       docs.forEach(order => {
         let itemsList = order.items.map(i => `${i.qty}x ${i.name}`).join('<br>');
         
-        // LOGIC FOR BUTTONS: If pending, show Accept/Decline. Else, show Delete.
         let actionButtons = "";
         if (order.status === "pending") {
           actionButtons = `
@@ -106,7 +134,7 @@
         }
 
         ordersList.innerHTML += `
-          <div class="border-2 p-4 rounded-2xl bg-white mb-4 ${order.status === 'pending' ? 'border-orange-300' : 'border-gray-100'}">
+          <div class="border-2 p-4 rounded-2xl bg-white mb-4 ${order.status === 'pending' ? 'border-orange-300 shadow-lg' : 'border-gray-100'}">
             <p class="font-bold">Student: ${order.studentNumber}</p>
             <p class="text-sm text-gray-500 mb-2">Status: <b class="uppercase">${order.status}</b></p>
             <div class="bg-gray-50 p-2 rounded text-sm">${itemsList}</div>
@@ -126,37 +154,9 @@
       db.collection("orders").doc(id).update({ status: status }); 
     }
 
-    // NEW FUNCTION: Delete Order
     async function deleteOrder(id) {
       if(confirm("Are you sure you want to remove this order from your list?")) {
         await db.collection("orders").doc(id).delete();
-      }
-    }
-
-    // Load Menu
-    db.collection('menu').where('vendorId', '==', myVendorId).onSnapshot(snapshot => {
-      const list = document.getElementById('staff-menu-list');
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const item = doc.data();
-        list.innerHTML += `
-          <div class="flex justify-between items-center bg-white p-3 rounded-xl border">
-            <div class="flex items-center gap-3">
-              <img src="${item.imageUrl}" class="w-12 h-12 rounded-lg object-cover">
-              <div>
-                <p class="font-bold">${item.name}</p>
-                <p class="text-sm text-red-700 font-bold">₱${item.price}</p>
-              </div>
-            </div>
-            <button onclick="deleteMenu('${doc.id}')" class="text-red-500 font-bold px-3 py-1 bg-red-50 rounded-lg">Remove</button>
-          </div>
-        `;
-      });
-    });
-
-    async function deleteMenu(id) {
-      if(confirm("Remove this food item?")) {
-        await db.collection('menu').doc(id).delete();
       }
     }
 
@@ -277,6 +277,8 @@ function confirmLogout() {
     // Use window.location.replace to prevent Android from getting stuck
     window.location.replace("login.html");
 }
+
+
   </script>
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:20px; width:80%; max-width:300px; text-align:center;">
