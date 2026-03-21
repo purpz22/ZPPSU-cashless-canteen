@@ -234,29 +234,7 @@ function showUpdateScreen(url) {
         localStorage.clear();
         window.location.replace("login.html");
     }
-
-    alert("App Version on Phone: " + THIS_APP_VERSION);
-
-db.collection("settings").doc("app_info").get().then((doc) => {
-    if (doc.exists) {
-        const data = doc.data();
-        const firebaseVersion = data.latest_version;
-
-        // 2. ADD THIS ALERT TO SEE IF FIREBASE IS SENDING DATA
-        alert("Version in Firebase: " + firebaseVersion);
-
-        if (firebaseVersion !== THIS_APP_VERSION) {
-            console.log("Mismatched! Showing update screen...");
-            showUpdateScreen(data.download_url);
-        } else {
-            alert("Versions match! No update needed.");
-        }
-    } else {
-        alert("Error: settings/app_info document does not exist in Firebase!");
-    }
-}).catch((error) => {
-    alert("Firebase Error: " + error.message);
-});
+    
   </script>
   
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
