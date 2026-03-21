@@ -121,26 +121,19 @@ db.collection("settings").doc("app_info").get().then((doc) => {
 // ... (keep your showUpdateScreen function exactly the same) ...
 
 function showUpdateScreen(url) {
-    // Hide the login forms
-    document.getElementById("main-login-forms").style.display = "none";
+    const mainForm = document.getElementById("main-login-forms");
+    if(mainForm) mainForm.style.display = "none";
     
-    // Create the update screen
-    const updateHTML = `
-        <div style="text-align:center; padding: 40px 20px;">
-            <h1 style="font-size: 50px; margin-bottom: 10px;">🚀</h1>
-            <h2 style="font-size: 24px; font-weight: bold; color: #b91c1c;">Update Required</h2>
-            <p style="color: #666; margin-top: 10px; margin-bottom: 30px;">
-                A new version of the ZPPSU Canteen App is available! You must update to continue using the app.
-            </p>
-<button onclick="AndroidInterface.startAppUpdate('${url}'); this.innerText='Downloading... Please wait'; this.disabled=true; this.style.opacity='0.5';" 
-        style="background: #b91c1c; color: white; padding: 15px 30px; border-radius: 15px; font-weight: bold; border: none; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 16px;">
-    Download & Install Update
-</button>
-        </div>
-    `;
+    const updateHTML = `<div style="text-align:center; padding:50px 20px;">
+        <h1 style="font-size:80px;">🚀</h1>
+        <h2 style="color:#b91c1c; font-size:24px;">Update Required</h2>
+        <p>A new version is ready!</p>
+        <button onclick="AndroidInterface.startAppUpdate('${url}')" style="background:#b91c1c; color:white; padding:15px; width:100%; border-radius:15px; border:none; font-weight:bold; margin-top:20px;">
+            Download & Install Now
+        </button>
+    </div>`;
     
-    // Insert it into the page
-    document.getElementById("main-login-forms").insertAdjacentHTML('afterend', updateHTML);
+    document.body.innerHTML = updateHTML; // This is the most "forceful" way to show it
 }
 
     window.onload = () => {
