@@ -90,19 +90,35 @@
   
   <script>
 
-// Change this number ONLY when you make a new .apk in Android Studio!
-const THIS_APP_VERSION = "1.0"; 
+// --- DYNAMIC FORCE UPDATE CHECKER ---
+let THIS_APP_VERSION = "0.0"; // Default fake version
 
-// Check Firebase for forced updates
+// 1. Ask the Android App what version it actually is
+if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getAppVersion) {
+    THIS_APP_VERSION = AndroidInterface.getAppVersion();
+} else {
+    // If they are on a computer browser, just let them in (or block them)
+    THIS_APP_VERSION = "WEB_VERSION"; 
+}
+
+// 2. Check Firebase to see what the newest version should be
 db.collection("settings").doc("app_info").get().then((doc) => {
     if (doc.exists) {
         const data = doc.data();
+        
+        // Skip the check if they are on a PC browser (Optional)
+        if (THIS_APP_VERSION === "WEB_VERSION") return;
+
+        // 3. If Android says "1.0" but Firebase says "2.0", BLOCK THEM!
         if (data.latest_version !== THIS_APP_VERSION) {
-            // The versions don't match! Force the update.
             showUpdateScreen(data.download_url);
         }
     }
+}).catch((error) => {
+    console.error("Error checking version:", error);
 });
+
+// ... (keep your showUpdateScreen function exactly the same) ...
 
 function showUpdateScreen(url) {
     // Hide the login forms
@@ -116,9 +132,10 @@ function showUpdateScreen(url) {
             <p style="color: #666; margin-top: 10px; margin-bottom: 30px;">
                 A new version of the ZPPSU Canteen App is available! You must update to continue using the app.
             </p>
-            <a href="${url}" style="background: #b91c1c; color: white; padding: 15px 30px; border-radius: 15px; font-weight: bold; text-decoration: none; display: inline-block; width: 100%;">
-                Download Update Now
-            </a>
+<button onclick="AndroidInterface.startAppUpdate('${url}'); this.innerText='Downloading... Please wait'; this.disabled=true; this.style.opacity='0.5';" 
+        style="background: #b91c1c; color: white; padding: 15px 30px; border-radius: 15px; font-weight: bold; border: none; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 16px;">
+    Download & Install Update
+</button>
         </div>
     `;
     
