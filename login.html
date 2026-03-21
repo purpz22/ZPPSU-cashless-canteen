@@ -89,6 +89,43 @@
   <script src="assets/js/firebase-config.js"></script>
   
   <script>
+
+// Change this number ONLY when you make a new .apk in Android Studio!
+const THIS_APP_VERSION = "1.0"; 
+
+// Check Firebase for forced updates
+db.collection("settings").doc("app_info").get().then((doc) => {
+    if (doc.exists) {
+        const data = doc.data();
+        if (data.latest_version !== THIS_APP_VERSION) {
+            // The versions don't match! Force the update.
+            showUpdateScreen(data.download_url);
+        }
+    }
+});
+
+function showUpdateScreen(url) {
+    // Hide the login forms
+    document.getElementById("main-login-forms").style.display = "none";
+    
+    // Create the update screen
+    const updateHTML = `
+        <div style="text-align:center; padding: 40px 20px;">
+            <h1 style="font-size: 50px; margin-bottom: 10px;">🚀</h1>
+            <h2 style="font-size: 24px; font-weight: bold; color: #b91c1c;">Update Required</h2>
+            <p style="color: #666; margin-top: 10px; margin-bottom: 30px;">
+                A new version of the ZPPSU Canteen App is available! You must update to continue using the app.
+            </p>
+            <a href="${url}" style="background: #b91c1c; color: white; padding: 15px 30px; border-radius: 15px; font-weight: bold; text-decoration: none; display: inline-block; width: 100%;">
+                Download Update Now
+            </a>
+        </div>
+    `;
+    
+    // Insert it into the page
+    document.getElementById("main-login-forms").insertAdjacentHTML('afterend', updateHTML);
+}
+
     window.onload = () => {
       document.getElementById('studentNumber').focus();
     };
