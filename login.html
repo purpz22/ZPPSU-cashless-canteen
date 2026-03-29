@@ -114,34 +114,42 @@
         document.getElementById('custom-alert').style.display = 'none';
     }
 
-// --- DYNAMIC FORCE UPDATE CHECKER ---
-let THIS_APP_VERSION = "1.0"; // Default fake version
+// --- IMPROVED VERSION CHECKER ---
+window.onload = () => {
+    // Wait 500ms for Android to inject the interface
+    setTimeout(() => {
+        checkAppVersion();
+    }, 500);
 
-// 1. Ask the Android App what version it actually is
-if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getAppVersion) {
-    THIS_APP_VERSION = AndroidInterface.getAppVersion();
-} else {
-    // If they are on a computer browser, just let them in (or block them)
-    THIS_APP_VERSION = "WEB_VERSION"; 
-}
+    document.getElementById('studentNumber').focus();
+};
 
-// 2. Check Firebase to see what the newest version should be
-db.collection("settings").doc("app_info").get().then((doc) => {
-    if (doc.exists) {
-        const data = doc.data();
-        
-        // Skip the check if they are on a PC browser (Optional)
-        if (THIS_APP_VERSION === "WEB_VERSION") return;
+function checkAppVersion() {
+    let THIS_APP_VERSION = "0.0";
 
-        // 3. If Android says "1.0" but Firebase says "2.0", BLOCK THEM!
-        if (data.latest_version !== THIS_APP_VERSION) {
-            showUpdateScreen(data.download_url);
-        }
+    // 1. Check the bridge
+    if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getAppVersion) {
+        THIS_APP_VERSION = AndroidInterface.getAppVersion();
+    } else {
+        // If still not detected, it might be a PC browser
+        console.log("Android bridge not found.");
+        return; 
     }
-}).catch((error) => {
-    console.error("Error checking version:", error);
-});
 
+    // 2. Compare with Firebase
+    db.collection("settings").doc("app_info").get().then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            const firebaseVersion = data.latest_version;
+
+            console.log("Phone: " + THIS_APP_VERSION + " | Firebase: " + firebaseVersion);
+
+            if (firebaseVersion !== THIS_APP_VERSION) {
+                showUpdateScreen(data.download_url);
+            }
+        }
+    });
+}
 // ... (keep your showUpdateScreen function exactly the same) ...
 
 function showUpdateScreen(url) {
