@@ -56,6 +56,20 @@
       </button>
     </div>
   </div>
+ 
+ <!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" style="display: none;" class="fixed inset-0 bg-black bg-opacity-80 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform transition-all">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl">⚠️</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Notice</h3>
+            <p id="custom-alert-message" class="text-gray-600 mb-6 text-sm leading-relaxed">Error message goes here.</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl shadow-md transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -64,7 +78,15 @@
   
   <script>
 
-    
+    // --- CUSTOM ALERT FUNCTIONS ---
+    function showCustomAlert(message) {
+        document.getElementById('custom-alert-message').innerText = message;
+        document.getElementById('custom-alert').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('custom-alert').style.display = 'none';
+    }
 
     const myVendorId = localStorage.getItem('vendorId');
     if(!myVendorId) window.location.href = 'login.html';
@@ -101,7 +123,7 @@ let initialLoad = true; // Prevents notifying for old orders when the app first 
                       "Student " + newOrder.studentNumber + " sent ₱" + newOrder.total.toFixed(2)
                   );
               } else {
-                  alert("New Order Received!");
+                  showCustomAlert("New Order Received!");
               }
           }
       });
@@ -191,7 +213,7 @@ let initialLoad = true; // Prevents notifying for old orders when the app first 
       const price = parseFloat(document.getElementById('item-price').value);
       const file = document.getElementById('item-img').files[0];
 
-      if(!name || !price || !file) return alert("Fill all fields and select an image.");
+      if(!name || !price || !file) return showCustomAlert("Fill all fields and select an image.");
       
       const btn = document.getElementById('btn-add-menu');
       btn.innerText = "Compressing & Saving...";
@@ -209,12 +231,12 @@ let initialLoad = true; // Prevents notifying for old orders when the app first 
           imageUrl: imgData // Saved as compressed text!
         });
         
-        alert("Item added successfully!");
+        showCustomAlert("Item added successfully!");
         document.getElementById('item-name').value = '';
         document.getElementById('item-price').value = '';
         document.getElementById('item-img').value = '';
       } catch(e) { 
-        alert("Error adding item: " + e.message); 
+        showCustomAlert("Error adding item: " + e.message); 
       }
 
       btn.innerText = "Add to Menu";
@@ -224,7 +246,7 @@ let initialLoad = true; // Prevents notifying for old orders when the app first 
     // --- UPDATE QR CODE ---
     async function updateQR() {
       const file = document.getElementById('new-qr').files[0];
-      if(!file) return alert("Select an image first.");
+      if(!file) return showCustomAlert("Select an image first.");
       
       const btn = document.getElementById('btn-qr');
       btn.innerText = "Updating...";
@@ -236,10 +258,10 @@ let initialLoad = true; // Prevents notifying for old orders when the app first 
         
         // Update Firestore
         await db.collection('vendors').doc(myVendorId).update({ qrUrl: qrData });
-        alert("QR Code Updated Successfully!");
+        showCustomAlert("QR Code Updated Successfully!");
         document.getElementById('new-qr').value = '';
       } catch(e) { 
-        alert("Error updating QR."); 
+        showCustomAlert("Error updating QR."); 
       }
       
       btn.innerText = "Upload New QR";

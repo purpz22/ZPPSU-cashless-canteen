@@ -88,7 +88,31 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="assets/js/firebase-config.js"></script>
   
+<!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" style="display: none;" class="fixed inset-0 bg-black bg-opacity-80 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform transition-all">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl">⚠️</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Notice</h3>
+            <p id="custom-alert-message" class="text-gray-600 mb-6 text-sm leading-relaxed">Error message goes here.</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl shadow-md transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+
   <script>
+
+// --- CUSTOM ALERT FUNCTIONS ---
+    function showCustomAlert(message) {
+        document.getElementById('custom-alert-message').innerText = message;
+        document.getElementById('custom-alert').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('custom-alert').style.display = 'none';
+    }
 
 // --- DYNAMIC FORCE UPDATE CHECKER ---
 let THIS_APP_VERSION = "1.0"; // Default fake version
@@ -147,7 +171,7 @@ function showUpdateScreen(url) {
         localStorage.setItem('role', 'student');
         window.location.href = 'index.html';
       } else {
-        alert("Please enter a valid Student Number");
+        showCustomAlert("Please enter a valid Student Number");
       }
     }
 
@@ -155,7 +179,7 @@ function showUpdateScreen(url) {
       const email = document.getElementById('staffEmail').value.trim().toLowerCase();
       const password = document.getElementById('staffPassword').value;
 
-      if (!email || !password) return alert("Enter email and password");
+      if (!email || !password) return showCustomAlert("Enter email and password");
 
       const btn = document.getElementById('btn-staff-login');
       btn.innerText = "Authenticating...";
@@ -174,14 +198,14 @@ function showUpdateScreen(url) {
           window.location.href = 'staff.html';
         } else {
           auth.signOut();
-          alert("Login successful, but no stall is assigned to this email. Contact Admin.");
+          showCustomAlert("Login successful, but no stall is assigned to this email. Contact Admin.");
           btn.innerText = "Secure Login as Staff";
           btn.disabled = false;
         }
 
       } catch (error) {
         console.error("Staff Login Error:", error);
-        alert("Login Failed: Incorrect Email or Password.");
+        showCustomAlert("Login Failed: Incorrect Email or Password.");
         btn.innerText = "Secure Login as Staff";
         btn.disabled = false;
       }
@@ -204,7 +228,7 @@ function showUpdateScreen(url) {
       const email = document.getElementById('adminEmail').value.trim();
       const password = document.getElementById('adminPassword').value;
       
-      if (!email || !password) return alert("Please enter email and password.");
+      if (!email || !password) return showCustomAlert("Please enter email and password.");
 
       const btn = document.getElementById('btn-admin-login');
       btn.innerText = "Authenticating...";
@@ -216,7 +240,7 @@ function showUpdateScreen(url) {
         window.location.href = 'admin.html';
       } catch (error) {
         console.error(error);
-        alert("Login Failed: " + error.message);
+        showCustomAlert("Login Failed: " + error.message);
         btn.innerText = "Secure Login";
         btn.disabled = false;
       }

@@ -73,6 +73,20 @@
   </div>
 </div>
 
+<!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" style="display: none;" class="fixed inset-0 bg-black bg-opacity-80 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform transition-all">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl">⚠️</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Notice</h3>
+            <p id="custom-alert-message" class="text-gray-600 mb-6 text-sm leading-relaxed">Error message goes here.</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl shadow-md transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+
   <!-- Firebase + JS -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -84,7 +98,20 @@
   <script src="assets/js/payment.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
   
+
+  
   <script>
+
+// --- CUSTOM ALERT FUNCTIONS ---
+    function showCustomAlert(message) {
+        document.getElementById('custom-alert-message').innerText = message;
+        document.getElementById('custom-alert').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('custom-alert').style.display = 'none';
+    }
+
     // Auto load vendors when page opens
    window.onload = () => {
   if (localStorage.getItem('role') !== 'student') {
@@ -134,7 +161,7 @@ async function initStatusListener() {
                             AndroidInterface.triggerAndroidNotification("Order Ready", "You can pick up now your order!");
                         } else {
                             // This is the fallback for browsers (Chrome/Edge)
-                            alert("You can pick up now your order!");
+                            showCustomAlert("You can pick up now your order!");
                         }
                     }
                 }
