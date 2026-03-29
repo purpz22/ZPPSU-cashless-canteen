@@ -102,41 +102,47 @@
         </div>
     </div>
 
-  <script>
-
-// --- CUSTOM ALERT FUNCTIONS ---
-    function showCustomAlert(message) {
-        document.getElementById('custom-alert-message').innerText = message;
-        document.getElementById('custom-alert').style.display = 'flex';
+<script>
+// --- 1. CUSTOM ALERT FUNCTIONS ---
+function showCustomAlert(message) {
+    const alertEl = document.getElementById('custom-alert');
+    const msgEl = document.getElementById('custom-alert-message');
+    if(alertEl && msgEl) {
+        msgEl.innerText = message;
+        alertEl.style.display = 'flex';
+    } else {
+        alert(message); // Fallback
     }
+}
 
-    function closeCustomAlert() {
-        document.getElementById('custom-alert').style.display = 'none';
-    }
+function closeCustomAlert() {
+    document.getElementById('custom-alert').style.display = 'none';
+}
 
-// --- IMPROVED VERSION CHECKER ---
+// --- 2. SINGLE INITIALIZATION (Merged window.onload) ---
 window.onload = () => {
-    // Wait 500ms for Android to inject the interface
+    // A. Focus the input immediately
+    const studentInput = document.getElementById('studentNumber');
+    if(studentInput) studentInput.focus();
+
+    // B. Wait a moment for Android to inject the bridge, then check version
     setTimeout(() => {
         checkAppVersion();
-    }, 500);
-
-    document.getElementById('studentNumber').focus();
+    }, 800);
 };
 
+// --- 3. VERSION CHECKER ---
 function checkAppVersion() {
     let THIS_APP_VERSION = "0.0";
 
-    // 1. Check the bridge
     if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getAppVersion) {
         THIS_APP_VERSION = AndroidInterface.getAppVersion();
+        console.log("Detecting Android App Version: " + THIS_APP_VERSION);
     } else {
-        // If still not detected, it might be a PC browser
-        console.log("Android bridge not found.");
+        console.log("Running in Web Browser mode.");
         return; 
     }
 
-    // 2. Compare with Firebase
     db.collection("settings").doc("app_info").get().then((doc) => {
         if (doc.exists) {
             const data = doc.data();
@@ -148,126 +154,132 @@ function checkAppVersion() {
                 showUpdateScreen(data.download_url);
             }
         }
-    });
+    }).catch(err => console.error("Update check failed:", err));
 }
-// ... (keep your showUpdateScreen function exactly the same) ...
 
 function showUpdateScreen(url) {
-    const mainForm = document.getElementById("main-login-forms");
-    if(mainForm) mainForm.style.display = "none";
+    // Hide the card content
+    const forms = document.getElementById("main-login-forms");
+    const adminForm = document.getElementById("admin-login-form");
+    if(forms) forms.style.display = "none";
+    if(adminForm) adminForm.style.display = "none";
     
-    const updateHTML = `<div style="text-align:center; padding:50px 20px;">
-        <h1 style="font-size:80px;">🚀</h1>
-        <h2 style="color:#b91c1c; font-size:24px;">Update Required</h2>
-        <p>A new version is ready!</p>
-        <button onclick="AndroidInterface.startAppUpdate('${url}')" style="background:#b91c1c; color:white; padding:15px; width:100%; border-radius:15px; border:none; font-weight:bold; margin-top:20px;">
-            Download & Install Now
-        </button>
-    </div>`;
+    const updateHTML = `
+        <div style="text-align:center; padding:40px 20px;">
+            <h1 style="font-size:60px; margin-bottom:10px;">🚀</h1>
+            <h2 style="color:#b91c1c; font-size:24px; font-weight:bold;">Update Required</h2>
+            <p style="color:#666; margin-top:10px; margin-bottom:30px;">A new version of the app is available. Please update to continue.</p>
+            <button onclick="startAndroidUpdate('${url}')" id="update-btn"
+                    style="background:#b91c1c; color:white; padding:18px; width:100%; border-radius:15px; border:none; font-weight:bold; font-size:16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                Download & Install Now
+            </button>
+        </div>`;
     
-    document.body.innerHTML = updateHTML; // This is the most "forceful" way to show it
+    // Inject into the main login forms area
+    const container = document.getElementById("main-login-forms").parentElement;
+    // Remove the red header text and replace forms with update UI
+    document.getElementById("main-login-forms").parentElement.innerHTML = updateHTML;
 }
 
-    window.onload = () => {
-      document.getElementById('studentNumber').focus();
-    };
-
-    function studentLogin() {
-      const num = document.getElementById('studentNumber').value.trim();
-      if (num.length > 3) {
-        localStorage.setItem('studentNumber', num);
-        localStorage.setItem('role', 'student');
-        window.location.href = 'index.html';
-      } else {
-        showCustomAlert("Please enter a valid Student Number");
-      }
+function startAndroidUpdate(url) {
+    if (typeof AndroidInterface !== 'undefined' && AndroidInterface.startAppUpdate) {
+        const btn = document.getElementById('update-btn');
+        btn.innerText = "Downloading... Check your status bar";
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        AndroidInterface.startAppUpdate(url);
+    } else {
+        window.open(url, '_blank');
     }
+}
 
-    async function staffLogin() {
-      const email = document.getElementById('staffEmail').value.trim().toLowerCase();
-      const password = document.getElementById('staffPassword').value;
+// --- 4. LOGIN LOGIC ---
+function studentLogin() {
+  const num = document.getElementById('studentNumber').value.trim();
+  if (num.length > 3) {
+    localStorage.setItem('studentNumber', num);
+    localStorage.setItem('role', 'student');
+    window.location.href = 'index.html';
+  } else {
+    showCustomAlert("Please enter a valid ZPPSU Student Number");
+  }
+}
 
-      if (!email || !password) return showCustomAlert("Enter email and password");
+async function staffLogin() {
+  const email = document.getElementById('staffEmail').value.trim().toLowerCase();
+  const password = document.getElementById('staffPassword').value;
 
-      const btn = document.getElementById('btn-staff-login');
-      btn.innerText = "Authenticating...";
-      btn.disabled = true;
+  if (!email || !password) return showCustomAlert("Enter email and password");
 
-      try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+  const btn = document.getElementById('btn-staff-login');
+  btn.innerText = "Authenticating...";
+  btn.disabled = true;
 
-        const snapshot = await db.collection('vendors').where('email', '==', user.email).get();
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    const snapshot = await db.collection('vendors').where('email', '==', user.email).get();
 
-        if (!snapshot.empty) {
-          const stallDoc = snapshot.docs[0];
-          localStorage.setItem('role', 'staff');
-          localStorage.setItem('vendorId', stallDoc.id);
-          window.location.href = 'staff.html';
-        } else {
-          auth.signOut();
-          showCustomAlert("Login successful, but no stall is assigned to this email. Contact Admin.");
-          btn.innerText = "Secure Login as Staff";
-          btn.disabled = false;
-        }
-
-      } catch (error) {
-        console.error("Staff Login Error:", error);
-        showCustomAlert("Login Failed: Incorrect Email or Password.");
-        btn.innerText = "Secure Login as Staff";
-        btn.disabled = false;
-      }
+    if (!snapshot.empty) {
+      const stallDoc = snapshot.docs[0];
+      localStorage.setItem('role', 'staff');
+      localStorage.setItem('vendorId', stallDoc.id);
+      window.location.href = 'staff.html';
+    } else {
+      auth.signOut();
+      showCustomAlert("Login successful, but no stall is assigned to this email. Contact Admin.");
+      btn.innerText = "Secure Login as Staff";
+      btn.disabled = false;
     }
+  } catch (error) {
+    showCustomAlert("Login Failed: Incorrect Email or Password.");
+    btn.innerText = "Secure Login as Staff";
+    btn.disabled = false;
+  }
+}
 
-    function toggleAdmin() {
-      const mainForm = document.getElementById('main-login-forms');
-      const adminForm = document.getElementById('admin-login-form');
-      
-      if (mainForm.style.display === 'block') {
-        mainForm.style.display = 'none';
-        adminForm.style.display = 'block';
-      } else {
-        mainForm.style.display = 'block';
-        adminForm.style.display = 'none';
-      }
-    }
+function toggleAdmin() {
+  const mainForm = document.getElementById('main-login-forms');
+  const adminForm = document.getElementById('admin-login-form');
+  if (mainForm.style.display === 'block') {
+    mainForm.style.display = 'none';
+    adminForm.style.display = 'block';
+  } else {
+    mainForm.style.display = 'block';
+    adminForm.style.display = 'none';
+  }
+}
 
-    async function adminLogin() {
-      const email = document.getElementById('adminEmail').value.trim();
-      const password = document.getElementById('adminPassword').value;
-      
-      if (!email || !password) return showCustomAlert("Please enter email and password.");
+async function adminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  if (!email || !password) return showCustomAlert("Please enter email and password.");
 
-      const btn = document.getElementById('btn-admin-login');
-      btn.innerText = "Authenticating...";
-      btn.disabled = true;
+  const btn = document.getElementById('btn-admin-login');
+  btn.innerText = "Authenticating...";
+  btn.disabled = true;
 
-      try {
-        await auth.signInWithEmailAndPassword(email, password);
-        localStorage.setItem('role', 'admin');
-        window.location.href = 'admin.html';
-      } catch (error) {
-        console.error(error);
-        showCustomAlert("Login Failed: " + error.message);
-        btn.innerText = "Secure Login";
-        btn.disabled = false;
-      }
-    }
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    localStorage.setItem('role', 'admin');
+    window.location.href = 'admin.html';
+  } catch (error) {
+    showCustomAlert("Login Failed: " + error.message);
+    btn.innerText = "Secure Login";
+    btn.disabled = false;
+  }
+}
 
-    function showLogoutModal() {
-        document.getElementById('logout-modal').style.display = 'flex';
-    }
+// --- 5. LOGOUT MODAL LOGIC ---
+function hideLogoutModal() {
+    document.getElementById('logout-modal').style.display = 'none';
+}
 
-    function hideLogoutModal() {
-        document.getElementById('logout-modal').style.display = 'none';
-    }
-
-    function confirmLogout() {
-        localStorage.clear();
-        window.location.replace("login.html");
-    }
-    
-  </script>
+function confirmLogout() {
+    localStorage.clear();
+    window.location.replace("login.html");
+}
+</script>
   
   <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:20px; width:80%; max-width:300px; text-align:center;">
