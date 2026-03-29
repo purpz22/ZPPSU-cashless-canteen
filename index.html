@@ -205,6 +205,15 @@ async function initStatusListener() {
       if (doc.exists) adminPrompt = doc.data().text;
     } catch (e) { console.error("Could not fetch AI prompt"); }
   }
+   let adminPrompt = ""; // Global variable to hold the admin rules
+
+  // Fetch the custom Admin Prompt from Firebase when app loads
+  async function fetchAdminPrompt() {
+    try {
+      const doc = await db.collection('settings').doc('ai_prompt').get();
+      if (doc.exists) adminPrompt = doc.data().text;
+    } catch (e) { console.error("Could not fetch AI prompt"); }
+  }
   fetchAdminPrompt(); // Run immediately
 
   // Show / Hide Chat window
@@ -226,54 +235,7 @@ async function initStatusListener() {
 
     const chatBox = document.getElementById('chat-box');
 
-    async function askGeminiAI(userPrompt) {
-    let apiKey = "";
-
-    // 1. Get the key from the Android App
-    if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getGeminiKey) {
-        apiKey = AndroidInterface.getGeminiKey();
-    } 
-
-    // 2. Security Check
-    if (!apiKey || apiKey === "") {
-        alert("Error: The Android App did not provide the API key. Please restart the app.");
-        return;
-    }
-
-    try {
-        // 3. Call the modern Gemini 1.5 Flash API
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: userPrompt }] }]
-            })
-        });
-
-        // 4. Check if Google rejected the key
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Google API Error:", errorData);
-            alert("Google API Error: " + (errorData.error?.message || "Unknown error"));
-            return;
-        }
-
-        // 5. Success! Extract the text
-        const data = await response.json();
-        const aiAnswer = data.candidates[0].content.parts[0].text;
-        
-        // ---> SHOW THE ANSWER IN YOUR CHATBOX HERE <---
-        console.log("Gemini says: ", aiAnswer);
-        // Example: document.getElementById('chat-box').innerHTML += `<p>${aiAnswer}</p>`;
-        
-    } catch (error) {
-        console.error("Network/Connection Error:", error);
-        alert("Connection Error. Please check your internet connection.");
-    }
-}
-
-
-    // 1. Print Student's Message
+    // 1. Print Student's Message to the chat
     chatBox.innerHTML += `
       <div class="bg-purple-600 text-white p-3 rounded-2xl rounded-tr-none self-end max-w-[85%] shadow-sm ml-auto">
         ${message}
@@ -291,35 +253,60 @@ async function initStatusListener() {
     `;
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 3. Request AI Response from Google Gemini API
+    // 3. Get the Gemini API Key from the Android App
+    let apiKey = "";
+    if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getGeminiKey) {
+        apiKey = AndroidInterface.getGeminiKey();
+    } 
+
+    if (!apiKey) {
+        document.getElementById(loadingId).remove();
+        showCustomAlert("AI features only work inside the official ZPPSU Android App!");
+        return;
+    }
+
+    // 4. Request AI Response from Google Gemini API
     try {
       // Combine Admin rules + Student question
       const fullPrompt = `${adminPrompt}\n\nStudent asks: ${message}\nAI Answer:`;
 
+      // Make the secure fetch call (using 1.5-flash)
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+              contents: [{ parts: [{ text: fullPrompt }] }]
+          })
+      });
+
+      if (!response.ok) throw new Error("Google API rejected the request.");
 
       const data = await response.json();
       const aiReply = data.candidates[0].content.parts[0].text;
 
-      // 4. Remove "Thinking" and Print AI Answer
+      // 5. Remove "Thinking" and Print AI Answer with Avatar
       document.getElementById(loadingId).remove();
       
       // Basic formatting to replace line breaks with <br> tags
       const formattedReply = aiReply.replace(/\n/g, '<br>');
 
       chatBox.innerHTML += `
-        <div class="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm">
-          ${formattedReply}
+        <div class="bg-white border border-gray-200 text-gray-800 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] shadow-sm flex items-start gap-2">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ZPPSU&backgroundColor=c084fc" class="w-6 h-6 rounded-full flex-shrink-0 mt-0.5">
+          <span>${formattedReply}</span>
         </div>
       `;
     } catch (error) {
+      console.error(error);
       document.getElementById(loadingId).remove();
       chatBox.innerHTML += `
         <div class="bg-red-100 text-red-600 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] text-xs">
-          Connection Error. Did you add the Gemini API Key?
+          Connection Error. Make sure you are using the Android App and have internet.
         </div>
       `;
     }
     
+    // Auto-scroll to the bottom
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 </script>
